@@ -1,58 +1,84 @@
-import { validateEmail, validatePassword, validateUsername } from "./validate";
+import { validateEmail, validatePassword, validateUsername } from "./validate.js"
 
-const changeColorBtn = document.getElementById("color-btn");
+let itemList = []
 
-changeColorBtn.addEventListener("click", () => {
-  const rainbow = document.getElementById("rainbow");
-  const colorArray = ["#FF6633", "#FFB399", "#FF33FF", "#FFFF99", "#00B3E6"];
-  rainbow.style.backgroundColor =
-    colorArray[Math.floor(Math.random() * colorArray.length)];
-});
+// rainbow section
+document.getElementById('color-btn').addEventListener('click', () => {
+  const rainbow = document.getElementById('rainbow')
+  const colorArray = ["#FF6633", "#FFB399", "#FF33FF", "#FFFF99", "#00B3E6"].filter(color => {
+    return color.toLowerCase() !== rgbToHex(rainbow.style.backgroundColor)
+  })
+  const randomColor = Math.round(Math.random() * (colorArray.length - 1))
+  rainbow.style.backgroundColor = colorArray[randomColor]
+})
 
-const addItemBtn = document.getElementById("add-btn");
-
-addItemBtn.addEventListener("click", () => {
-  const inputBackpack = document.getElementById("item-input");
-  const errorMessage = document.getElementsByClassName("error")[0];
-  if (!inputBackpack.value) {
-    errorMessage.textContent = "Plese Enter an item to continue!";
-    return;
+// sally's section
+// add
+document.getElementById('add-btn').addEventListener('click', () => {
+  const addItem = document.getElementById('item-input').value
+  if (addItem?.length > 0) {
+    const newItem = document.createElement('li')
+    newItem.textContent = addItem
+    itemList.push(addItem)
+    document.getElementById('listItem').querySelector('ul').appendChild(newItem)
+    document.getElementById('item-input').value = ''
   }
-  errorMessage.textContent = "";
-  const ul = document.getElementById("listItem").firstElementChild;
-  const li = createLiElement(inputBackpack.value);
-  console.log(li);
-  ul.appendChild(li);
-});
+})
+// clear
+document.getElementById('add-btn').nextElementSibling.addEventListener('click', () => {
+  document.getElementById('listItem').querySelector('ul').textContent = ''
+  itemList = []
+})
 
-const createLiElement = (item) => {
-  const li = document.createElement("li");
-  li.textContent = item;
-  return li;
-};
-
-const formSection = document.getElementById("input-list");
-const inputs = formSection.getElementsByTagName("input");
-const submitBtn = document.getElementById("submit-btn");
-
-submitBtn.addEventListener("click", (e) => {
-  e.preventDefault();
-  const errorMessage = formSection.querySelector(".error");
-  errorMessage.textContent = "";
-
-  const username = inputs[0].value;
-  const email = inputs[1].value;
-  const password = inputs[2].value;
-
+// information section
+document.getElementById('submit-btn').addEventListener('click', (e) => {
+  e.preventDefault()
+  const username = document.getElementById('input-list').querySelector('form').querySelectorAll('input')[0].value
+  const email = document.getElementById('input-list').querySelector('form').querySelectorAll('input')[1].value
+  const password = document.getElementById('input-list').querySelector('form').querySelectorAll('input')[2].value
+  const errorElement = document.getElementById('input-list').querySelector('form').querySelector('p')
   if (!validateUsername(username)) {
-    errorMessage.textContent =
-      "Username is Invalid make sure to contain uppercase, number and not special character";
+    errorElement.textContent = 'Username must contains uppercase, number and at least 5 characters long (no special character)'
   } else if (!validateEmail(email)) {
-    errorMessage.textContent = "This is not a Email format! Contain @ and .com";
+    errorElement.textContent = 'Email must contains @ and end with .com'
   } else if (!validatePassword(password)) {
-    errorMessage.textContent =
-      "Password is Invalid make sure to contain uppercase, lowercase, number and special character";
+    errorElement.textContent = 'Password must contains uppercase, lowercase, number, special character and at least 8 characters long'
   } else {
-    errorMessage.textContent = "Successfully! Yay";
+    errorElement.textContent = 'Successfully! Yay'
   }
-});
+})
+
+window.addEventListener('load', () => {
+  const oldItemList = JSON.parse(localStorage.getItem('itemList'))
+  oldItemList.forEach(item => {
+    const newItem = document.createElement('li')
+    newItem.textContent = item
+    itemList.push(item)
+    document.getElementById('listItem').querySelector('ul').appendChild(newItem)
+  })
+  const oldColor = JSON.parse(localStorage.getItem('color'))
+  document.getElementById('rainbow').style.backgroundColor = oldColor
+})
+
+window.addEventListener('unload', (e) => {
+  e.preventDefault()
+  localStorage.setItem('itemList', JSON.stringify(itemList))
+  localStorage.setItem('color', JSON.stringify(document.getElementById('rainbow').style.backgroundColor))
+})
+
+const componentToHex = (c) => {
+  const hex = c.toString(16);
+  return hex.length == 1 ? "0" + hex : hex;
+}
+
+const rgbToHex = (rgb) => {
+  const setOfNumber = '0123456789,'
+  const arrayOfNumber = [...setOfNumber]
+  const arrayOfRGB = [...rgb].filter(char => {
+    return arrayOfNumber.includes(char)
+  }).join('').split(',')
+  const r = Number(arrayOfRGB[0])
+  const g = Number(arrayOfRGB[1])
+  const b = Number(arrayOfRGB[2])
+  return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+}
